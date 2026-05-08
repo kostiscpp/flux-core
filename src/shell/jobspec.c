@@ -233,9 +233,15 @@ struct jobspec *jobspec_parse (const char *jobspec,
         if (json_unpack_ex (resources, error, 0, "[{s:s}]", "type", &type) < 0) {
             goto error;
         }
+        int total_nodes = rcalc_total_nodes (r);
         if (streq (type, "node")) {
-            job->node_count = rcalc_total_nodes (r);
+            job->node_count = total_nodes;
             job->slots_per_node = job->slot_count / job->node_count;
+        }
+        else if (total_nodes > job->slot_count) {
+            job->node_count = total_nodes;
+            job->slot_count = total_nodes;
+            job->slots_per_node = 1;
         }
         else {
             job->node_count = -1;
